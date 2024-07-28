@@ -4,6 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Audio", "Audio.vcxproj", "{5F746F76-4C44-45D4-9E6B-D27FF9F57B8B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E} = {39A9CB6F-6F44-4205-A01B-555DB992A76E}
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043} = {A2A617B6-2015-48E9-BF8B-76E18FDC0043}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Util", "..\Util\Util.vcxproj", "{39A9CB6F-6F44-4205-A01B-555DB992A76E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "File", "..\File\File.vcxproj", "{A2A617B6-2015-48E9-BF8B-76E18FDC0043}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +29,22 @@ Global
 		{5F746F76-4C44-45D4-9E6B-D27FF9F57B8B}.Release|x64.Build.0 = Release|x64
 		{5F746F76-4C44-45D4-9E6B-D27FF9F57B8B}.Release|x86.ActiveCfg = Release|Win32
 		{5F746F76-4C44-45D4-9E6B-D27FF9F57B8B}.Release|x86.Build.0 = Release|Win32
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Debug|x64.ActiveCfg = Debug|x64
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Debug|x64.Build.0 = Debug|x64
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Debug|x86.ActiveCfg = Debug|Win32
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Debug|x86.Build.0 = Debug|Win32
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Release|x64.ActiveCfg = Release|x64
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Release|x64.Build.0 = Release|x64
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Release|x86.ActiveCfg = Release|Win32
+		{39A9CB6F-6F44-4205-A01B-555DB992A76E}.Release|x86.Build.0 = Release|Win32
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Debug|x64.ActiveCfg = Debug|x64
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Debug|x64.Build.0 = Debug|x64
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Debug|x86.ActiveCfg = Debug|Win32
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Debug|x86.Build.0 = Debug|Win32
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Release|x64.ActiveCfg = Release|x64
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Release|x64.Build.0 = Release|x64
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Release|x86.ActiveCfg = Release|Win32
+		{A2A617B6-2015-48E9-BF8B-76E18FDC0043}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
