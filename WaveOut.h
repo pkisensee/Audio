@@ -61,7 +61,7 @@ private:
 
   class Impl;
   using ImplDeleter = void ( * )( Impl* );
-  std::unique_ptr<Impl, ImplDeleter> mImpl;
+  std::unique_ptr<Impl, ImplDeleter> impl_;
 };
 
 }; // end namespace PKIsensee
