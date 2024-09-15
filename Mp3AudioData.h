@@ -50,7 +50,7 @@ public:
 private:
 
   bool IsValidFileHeader() const;
-  void ParseFrames( const uint8_t*, size_t );
+  void ParseFrames( const uint8_t*, uint32_t );
 
 private:
 

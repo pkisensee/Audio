@@ -59,17 +59,17 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
   assert( fileAudioOffsetHint < fileLength );
   if( fileAudioOffsetHint >= fileLength )
     fileAudioOffsetHint = 0;
-  auto audioBufferSize = fileLength - fileAudioOffsetHint;
-  assert( audioBufferSize <= std::numeric_limits<size_t>::max() );
-  auto audioBufferSizeT = static_cast<size_t>( audioBufferSize );
+  auto audioBufferSize64 = fileLength - fileAudioOffsetHint;
+  assert( audioBufferSize64 <= std::numeric_limits<uint32_t>::max() );
+  auto audioBufferSize = static_cast<uint32_t>( audioBufferSize64 );
 
   // Skip leading ID3v2 tag when hint non-zero
   [[maybe_unused]] bool isSuccessfulSkip = mp3File.SetPos( fileAudioOffsetHint );
   assert( isSuccessfulSkip );
 
   // Read file into memory
-  mAudioBuffer.resize( audioBufferSizeT );
-  if( !mp3File.Read( mAudioBuffer.data(), audioBufferSizeT ) )
+  mAudioBuffer.resize( audioBufferSize );
+  if( !mp3File.Read( mAudioBuffer.data(), audioBufferSize ) )
   {
     PKLOG_WARN( "Failed to read MP3 file %S; ERR: %d\n", mp3FileName.c_str(), Util::GetLastError() );
     return false;
@@ -81,7 +81,7 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
   auto countFrames = 0u;
   const uint8_t* pFirstMpegFrame = nullptr;
   auto pRawBuffer = reinterpret_cast<const uint8_t*>( mAudioBuffer.data() );
-  auto pEnd = pRawBuffer + std::min( audioBufferSize, kMaxMpegFrameHeaderSearch );
+  auto pEnd = pRawBuffer + std::min( audioBufferSize64, kMaxMpegFrameHeaderSearch );
   for( auto offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
   {
     // Search for an MPEG header
@@ -116,9 +116,9 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
   // A good bet this is an MPEG file
   // Return to the first frame and parse the entire stream
   assert( pFirstMpegFrame >= mAudioBuffer.data() );
-  auto firstFrameOffset = static_cast<size_t>( pFirstMpegFrame - mAudioBuffer.data() );
-  assert( firstFrameOffset <= audioBufferSizeT );
-  ParseFrames( pFirstMpegFrame, audioBufferSizeT - firstFrameOffset );
+  uint32_t firstFrameOffset = static_cast<uint32_t>( pFirstMpegFrame - mAudioBuffer.data() );
+  assert( firstFrameOffset <= audioBufferSize );
+  ParseFrames( pFirstMpegFrame, audioBufferSize - firstFrameOffset );
   return true;
 }
 
@@ -175,9 +175,9 @@ uint32_t Mp3AudioData::GetChannelCount() const
 // If frames needed to be maintained, store pRawBuffer pointers in a vector;
 // not currently required.
 
-void Mp3AudioData::ParseFrames( const uint8_t* pRawBuffer, size_t bufferSize ) // private
+void Mp3AudioData::ParseFrames( const uint8_t* pRawBuffer, uint32_t bufferSize ) // private
 {
-  mDurationSec = 0.0;
+  mDurationSec = 0.0; // TODO durationSec_
   auto pEnd = pRawBuffer + bufferSize;
   for( auto offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
   {
