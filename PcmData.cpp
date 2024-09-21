@@ -121,8 +121,10 @@ void PcmData::AppendPcm( const uint8_t* pcmData, uint32_t pcmBytes )
 
 bool PcmData::WriteToWavFile( const std::filesystem::path& wavPath ) const
 {
+  uint32_t dataSize = uint32_t( mPcm->size() );
+
   WaveHeader wh;
-  uint32_t fileSize = static_cast<uint32_t>( sizeof( wh ) + mPcm->size() - sizeof( wh.chunkID ) - sizeof( wh.fileSize ) );
+  uint32_t fileSize  = static_cast<uint32_t>( sizeof( wh ) + dataSize - sizeof( wh.chunkID ) - sizeof( wh.fileSize ) );
   wh.fileSize        = Util::ToLittleEndian( fileSize );
   wh.nChannels       = Util::ToLittleEndian( static_cast<uint16_t>( mChannelCount ) );
   wh.wBitsPerSample  = Util::ToLittleEndian( static_cast<uint16_t>( mBitsPerSample ) );
@@ -130,14 +132,14 @@ bool PcmData::WriteToWavFile( const std::filesystem::path& wavPath ) const
   uint16_t blockAlign= static_cast<uint16_t>( wh.nChannels * wh.wBitsPerSample / CHAR_BIT );
   wh.nBlockAlign     = Util::ToLittleEndian( blockAlign );
   wh.nAvgBytesPerSec = Util::ToLittleEndian( wh.nSamplesPerSec * wh.nBlockAlign );
-  wh.dataSize        = Util::ToLittleEndian( static_cast<uint32_t>( mPcm->size() ) );
+  wh.dataSize        = Util::ToLittleEndian( dataSize );
 
   File wavFile( wavPath );
   if( !wavFile.Create( FileFlags::Write ) )
     return false;
   if( !wavFile.Write( &wh, sizeof( wh ) ) )
     return false;
-  if( !wavFile.Write( mPcm->data(), mPcm->size() ) )
+  if( !wavFile.Write( mPcm->data(), dataSize ) )
     return false;
   return true;
 }
