@@ -39,6 +39,8 @@ public:
   WavePlayer( WavePlayer&& ) = delete;
   WavePlayer& operator=( WavePlayer&& ) = delete;
 
+  bool LoadMp3( const std::filesystem::path& mp3File );
+
   bool IsPlaying() const
   {
     return waveOut_.IsPlaying();
@@ -48,8 +50,6 @@ public:
   {
     return waveOut_.HasEnded();
   }
-
-  bool LoadMp3( const std::filesystem::path& mp3File );
 
   void Start( uint32_t positionMs = 0u )
   {

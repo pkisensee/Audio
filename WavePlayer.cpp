@@ -36,6 +36,7 @@ bool WavePlayer::LoadMp3( const std::filesystem::path& mp3File )
   pcmData_.SetSamplesPerSecond( audioData.GetSamplingRateHz() );
   pcmData_.PrepareBuffer( audioData.GetDurationMs() );
 
+  // TODO: update to convert MPEG data to PCM without using Window Media Foundation
   WinMediaFoundation mf;
   WinMediaSourceReader sourceReader( mp3File );
 

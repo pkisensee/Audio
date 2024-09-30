@@ -180,7 +180,7 @@ uint32_t Mp3AudioData::GetChannelCount() const
 
 void Mp3AudioData::ParseFrames( const uint8_t* pRawBuffer, uint32_t bufferSize ) // private
 {
-  durationSec_ = 0.0; // TODO durationSec_
+  durationSec_ = 0.0;
   auto pEnd = pRawBuffer + bufferSize;
   for( auto offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
   {
