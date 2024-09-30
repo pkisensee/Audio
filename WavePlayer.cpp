@@ -32,9 +32,9 @@ bool WavePlayer::LoadMp3( const std::filesystem::path& mp3File )
     return false;
 
   // Prepare PCM buffer
-  mPcmData.SetChannelCountAsInt( audioData.GetChannelCount() );
-  mPcmData.SetSamplesPerSecond( audioData.GetSamplingRateHz() );
-  mPcmData.PrepareBuffer( audioData.GetDurationMs() );
+  pcmData_.SetChannelCountAsInt( audioData.GetChannelCount() );
+  pcmData_.SetSamplesPerSecond( audioData.GetSamplingRateHz() );
+  pcmData_.PrepareBuffer( audioData.GetDurationMs() );
 
   WinMediaFoundation mf;
   WinMediaSourceReader sourceReader( mp3File );
@@ -51,10 +51,10 @@ bool WavePlayer::LoadMp3( const std::filesystem::path& mp3File )
   {
     WinMediaBuffer mediaBuffer = mediaSample.GetMediaBuffer();
     WinMediaBufferLock lock( mediaBuffer );
-    mPcmData.AppendPcm( lock.GetData(), lock.GetSize() );
+    pcmData_.AppendPcm( lock.GetData(), lock.GetSize() );
     pcmBytes += lock.GetSize(); // for debugging
   }
 
   // Prepare the wave output device
-  return mWaveOut.Open( mPcmData, mWaveEvent );
+  return waveOut_.Open( pcmData_, waveEvent_ );
 }

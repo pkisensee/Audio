@@ -95,7 +95,7 @@ private:
 
 private:
 
-  uint32_t mpegHeader = 0u;
+  uint32_t mpegHeader_ = 0u;
 
 }; // class MpegFrameHdr
 

@@ -45,52 +45,52 @@ public:
 
   PcmChannelCount GetChannelCount() const
   {
-    return mChannelCount;
+    return channelCount_;
   }
 
   uint32_t GetChannelCountAsInt() const
   {
-    return static_cast<uint32_t>( mChannelCount );
+    return uint32_t( channelCount_ );
   }
 
   void SetChannelCount( PcmChannelCount channelCount )
   {
-    mChannelCount = channelCount;
+    channelCount_ = channelCount;
   }
 
   void SetChannelCountAsInt( uint32_t channelCount )
   {
-    mChannelCount = ( channelCount == 1 ) ? PcmChannelCount::Mono : PcmChannelCount::Stereo;
+    channelCount_ = ( channelCount == 1 ) ? PcmChannelCount::Mono : PcmChannelCount::Stereo;
   }
 
   uint32_t GetBitsPerSample() const
   {
-    return mBitsPerSample;
+    return bitsPerSample_;
   }
 
   uint32_t GetSamplesPerSecond() const
   {
-    return mSamplesPerSecond;
+    return samplesPerSecond_;
   }
 
   void SetSamplesPerSecond( uint32_t samplesPerSecond )
   {
-    mSamplesPerSecond = samplesPerSecond;
+    samplesPerSecond_ = samplesPerSecond;
   }
 
   size_t GetSize() const
   {
-    return mPcm->size();
+    return pcmBuffer_->size();
   }
 
   const uint8_t* GetPtr() const
   {
-    return mPcm->data();
+    return pcmBuffer_->data();
   }
 
   uint32_t GetBlockAlignment() const
   {
-    return GetChannelCountAsInt() * mBitsPerSample / CHAR_BIT;
+    return GetChannelCountAsInt() * bitsPerSample_ / CHAR_BIT;
   }
 
   uint32_t GetBytesPerSec() const
@@ -111,13 +111,13 @@ private:
 
 private:
 
-  PcmChannelCount mChannelCount = PcmChannelCount::Mono;
-  uint32_t mBitsPerSample = kPcmBitsPerSample;
-  uint32_t mSamplesPerSecond = 0;
+  PcmChannelCount channelCount_ = PcmChannelCount::Mono;
+  uint32_t bitsPerSample_ = kPcmBitsPerSample;
+  uint32_t samplesPerSecond_ = 0u;
 
-  // shared_ptr allows for fast copies of PcmData
+  // shared_ptr allows for fast copies of PCM data
   using PcmBuffer = std::vector<uint8_t>;
-  std::shared_ptr<PcmBuffer> mPcm;
+  std::shared_ptr<PcmBuffer> pcmBuffer_;
 
 }; // class PcmData
 

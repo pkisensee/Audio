@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cassert>
 #include <filesystem>
+#include <future>
 #include <limits>
 
 #include "File.h"
@@ -42,7 +43,7 @@ constexpr double kMillisecondsPerSecond = 1000.0;
 // In practice, audio data can begin at quite large offsets.
 constexpr uint64_t kMaxMpegFrameHeaderSearch = 500 * 1024;
 
-constexpr size_t kMinMpegFrames = 3; // find this many frames to assume this is an MPEG file
+constexpr uint32_t kMinMpegFrames = 3; // find this many frames to assume this is an MPEG file
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -68,24 +69,26 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
   assert( isSuccessfulSkip );
 
   // Read file into memory
-  mAudioBuffer.resize( audioBufferSize );
-  if( !mp3File.Read( mAudioBuffer.data(), audioBufferSize ) )
+  audioBuffer_.resize( audioBufferSize );
+  if( !mp3File.Read( audioBuffer_.data(), audioBufferSize ) )
   {
     PKLOG_WARN( "Failed to read MP3 file %S; ERR: %d\n", mp3FileName.c_str(), Util::GetLastError() );
     return false;
   }
-  mp3File.Close();
+
+  // Close the file asynchronously while we parse the audio frames from memory
+  std::future fileClose = std::async( std::launch::async, [&] { mp3File.Close(); } );
 
   // Look for the first kMinMpegFrames MPEG Version 1 Layer III frames that are 
   // consistent within the first kMaxMpegFrameHeaderSearch bytes
-  auto countFrames = 0u;
+  uint32_t countFrames = 0u;
   const uint8_t* pFirstMpegFrame = nullptr;
-  auto pRawBuffer = reinterpret_cast<const uint8_t*>( mAudioBuffer.data() );
+  auto pRawBuffer = reinterpret_cast<const uint8_t*>( audioBuffer_.data() );
   auto pEnd = pRawBuffer + std::min( audioBufferSize64, kMaxMpegFrameHeaderSearch );
-  for( auto offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
+  for( uint32_t offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
   {
     // Search for an MPEG header
-    offset = 1;
+    offset = 1u;
     if( *pRawBuffer != kMpegHdrByte )
       continue;
 
@@ -98,7 +101,7 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
       if( pFirstMpegFrame == nullptr )
       {
         pFirstMpegFrame = pRawBuffer;
-        mFirstMpegFrameHdr = frameHdr;
+        firstMpegFrameHdr_ = frameHdr;
       }
       if( ++countFrames == kMinMpegFrames )
       {
@@ -115,46 +118,48 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
 
   // A good bet this is an MPEG file
   // Return to the first frame and parse the entire stream
-  assert( pFirstMpegFrame >= mAudioBuffer.data() );
-  uint32_t firstFrameOffset = static_cast<uint32_t>( pFirstMpegFrame - mAudioBuffer.data() );
+  assert( pFirstMpegFrame >= audioBuffer_.data() );
+  uint32_t firstFrameOffset = static_cast<uint32_t>( pFirstMpegFrame - audioBuffer_.data() );
   assert( firstFrameOffset <= audioBufferSize );
   ParseFrames( pFirstMpegFrame, audioBufferSize - firstFrameOffset );
+
+  fileClose.wait();
   return true;
 }
 
 bool Mp3AudioData::HasMpegAudio() const
 {
-  return mFirstMpegFrameHdr.IsValid();
+  return firstMpegFrameHdr_.IsValid();
 }
 
 MpegVersion Mp3AudioData::GetVersion() const
 {
-  return mFirstMpegFrameHdr.GetVersion();
+  return firstMpegFrameHdr_.GetVersion();
 }
 
 MpegLayer Mp3AudioData::GetLayer() const
 {
-  return mFirstMpegFrameHdr.GetLayer();
+  return firstMpegFrameHdr_.GetLayer();
 }
 
 uint32_t Mp3AudioData::GetDurationMs() const
 {
-  return static_cast<uint32_t>( std::round( mDurationSec * kMillisecondsPerSecond ) );
+  return static_cast<uint32_t>( std::round( durationSec_ * kMillisecondsPerSecond ) );
 }
 
 size_t Mp3AudioData::GetFrameCount() const
 {
-  return mFrameCount;
+  return frameCount_;
 }
 
 uint32_t Mp3AudioData::GetSamplingRateHz() const
 {
-  return mFirstMpegFrameHdr.GetSamplingRateHz();
+  return firstMpegFrameHdr_.GetSamplingRateHz();
 }
 
 uint32_t Mp3AudioData::GetChannelCount() const
 {
-  switch( mFirstMpegFrameHdr.GetChannelMode() )
+  switch( firstMpegFrameHdr_.GetChannelMode() )
   {
   case ( MpegChannelMode::SingleChannel ): return 1;
   case ( MpegChannelMode::Stereo ):        [[fallthrough]];
@@ -177,7 +182,7 @@ uint32_t Mp3AudioData::GetChannelCount() const
 
 void Mp3AudioData::ParseFrames( const uint8_t* pRawBuffer, uint32_t bufferSize ) // private
 {
-  mDurationSec = 0.0; // TODO durationSec_
+  durationSec_ = 0.0; // TODO durationSec_
   auto pEnd = pRawBuffer + bufferSize;
   for( auto offset = 0u; pRawBuffer < pEnd; pRawBuffer += offset )
   {
@@ -190,8 +195,8 @@ void Mp3AudioData::ParseFrames( const uint8_t* pRawBuffer, uint32_t bufferSize )
       continue;
 
     offset = frameHdr.GetFrameBytes();
-    mDurationSec += frameHdr.GetFrameDurationInSeconds();
-    ++mFrameCount;
+    durationSec_ += frameHdr.GetFrameDurationInSeconds();
+    ++frameCount_;
   }
 
   // Ensure we didn't miss any frames (debugging only)

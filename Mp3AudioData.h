@@ -54,10 +54,10 @@ private:
 
 private:
 
-  std::vector<uint8_t> mAudioBuffer;
-  MpegFrameHdr mFirstMpegFrameHdr;
-  double mDurationSec = 0.0; // seconds
-  size_t mFrameCount = 0u;
+  std::vector<uint8_t> audioBuffer_;
+  MpegFrameHdr firstMpegFrameHdr_;
+  double durationSec_ = 0.0; // seconds
+  size_t frameCount_ = 0u;
 
 }; // class Mp3AudioData
 

@@ -41,65 +41,65 @@ public:
 
   bool IsPlaying() const
   {
-    return mWaveOut.IsPlaying();
+    return waveOut_.IsPlaying();
   }
 
   bool HasEnded() const
   {
-    return mWaveOut.HasEnded();
+    return waveOut_.HasEnded();
   }
 
   bool LoadMp3( const std::filesystem::path& mp3File );
 
   void Start( uint32_t positionMs = 0u )
   {
-    mWaveEvent.Reset();
-    mWaveOut.Prepare( positionMs );
-    mWaveOut.Start();
+    waveEvent_.Reset();
+    waveOut_.Prepare( positionMs );
+    waveOut_.Start();
   }
 
   void Pause()
   {
-    mWaveOut.Pause();
+    waveOut_.Pause();
   }
 
   void Restart()
   {
-    mWaveOut.Start();
+    waveOut_.Start();
   }
 
   void Update( uint32_t waitMilliseconds = kDefaultUpdateWaitMilliseconds )
   {
-    if( mWaveEvent.IsSignalled( waitMilliseconds ) )
-      mWaveOut.Update();
+    if( waveEvent_.IsSignalled( waitMilliseconds ) )
+      waveOut_.Update();
   }
 
   uint32_t GetLengthMs() const
   {
-    assert( mPcmData.GetSize() <= std::numeric_limits<uint32_t>::max() );
-    return mPcmData.BytesToMilliseconds( static_cast<uint32_t>( mPcmData.GetSize() ) );
+    assert( pcmData_.GetSize() <= std::numeric_limits<uint32_t>::max() );
+    return pcmData_.BytesToMilliseconds( static_cast<uint32_t>( pcmData_.GetSize() ) );
   }
 
   uint32_t GetPositionMs() const
   {
-    return mWaveOut.GetPositionMs();
+    return waveOut_.GetPositionMs();
   }
 
   WaveOut::Volume GetVolume() const
   {
-    return mWaveOut.GetVolume();
+    return waveOut_.GetVolume();
   }
 
   void SetVolume( const WaveOut::Volume& volume )
   {
-    return mWaveOut.SetVolume( volume );
+    return waveOut_.SetVolume( volume );
   }
 
 private:
 
-  PcmData     mPcmData;   // raw PCM buffer
-  Util::Event mWaveEvent; // signaled when mWaveOut is ready for more data
-  WaveOut     mWaveOut;
+  PcmData     pcmData_;   // raw PCM buffer
+  Util::Event waveEvent_; // signaled when waveOut_ is ready for more data
+  WaveOut     waveOut_;
 
 };
 

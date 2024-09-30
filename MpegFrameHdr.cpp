@@ -178,7 +178,7 @@ constexpr std::array<std::array<std::array<uint32_t, 4>, 4>, 15> kBitrates =
 
 MpegFrameHdr::MpegFrameHdr( const uint8_t* pMpegData )
   : 
-  mpegHeader( Util::ToBigEndian(*(reinterpret_cast<const uint32_t*>(pMpegData))) )
+  mpegHeader_( Util::ToBigEndian(*(reinterpret_cast<const uint32_t*>(pMpegData))) )
 {
   assert( pMpegData != nullptr );
 }
@@ -347,7 +347,7 @@ constexpr uint32_t MpegFrameHdr::ExtractBits( MpegField mpegField ) const // pri
 
   auto shift = fi.bitOffset - fi.bitCount;
   fi.bitMask <<= shift;
-  auto value = ( mpegHeader & fi.bitMask ) >> shift;
+  auto value = ( mpegHeader_ & fi.bitMask ) >> shift;
   return value;
 }
 

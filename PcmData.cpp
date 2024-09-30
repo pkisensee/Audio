@@ -38,9 +38,9 @@ constexpr uint32_t kWaveFormatExSize = ( 2u * 2u ) + ( 2u * 4u ) + ( 3u * 2u );
 // Little endian format
 // https://docs.microsoft.com/en-us/windows/win32/medfound/tutorial--decoding-audio
 
-#pragma pack( push, 1 )
-struct WaveHeader
+struct WaveHeader PK_PACKED_STRUCT
 {
+PK_START_PACK
   // RIFF header
   uint32_t chunkID = FourCC( "RIFF" );
   uint32_t fileSize = 0; // file size not including "RIFF" field and this field (8 bytes)
@@ -62,14 +62,14 @@ struct WaveHeader
   // Data header
   uint32_t dataID = FourCC( "data" );
   uint32_t dataSize = 0;
+PK_END_PACK
 };
-#pragma pack( pop )
 
 PcmData::PcmData( PcmChannelCount channelCount, uint32_t samplesPerSecond )
   :
-  mChannelCount( channelCount ),
-  mSamplesPerSecond( samplesPerSecond ),
-  mPcm( new PcmBuffer )
+  channelCount_( channelCount ),
+  samplesPerSecond_( samplesPerSecond ),
+  pcmBuffer_( new PcmBuffer )
 {
 }
 
@@ -106,29 +106,29 @@ uint32_t PcmData::MillisecondsToBytes( uint32_t positionMs ) const
 void PcmData::PrepareBuffer( uint32_t audioMilliseconds )
 {
   auto byteEstimate = GetEstDataSize( audioMilliseconds );
-  if( !mPcm )
-    mPcm.reset( new PcmBuffer );
-  mPcm->reserve( byteEstimate );
-  mPcm->resize( 0 );
+  if( !pcmBuffer_ )
+    pcmBuffer_.reset( new PcmBuffer );
+  pcmBuffer_->reserve( byteEstimate );
+  pcmBuffer_->resize( 0 );
 }
 
 void PcmData::AppendPcm( const uint8_t* pcmData, uint32_t pcmBytes )
 {
-  assert( mPcm );
-  assert( mPcm->size() + pcmBytes <= mPcm->capacity() ); // try to avoid reallocation
-  mPcm->insert( mPcm->end(), pcmData, pcmData + pcmBytes );
+  assert( pcmBuffer_ );
+  assert( pcmBuffer_->size() + pcmBytes <= pcmBuffer_->capacity() ); // try to avoid reallocation
+  pcmBuffer_->insert( pcmBuffer_->end(), pcmData, pcmData + pcmBytes );
 }
 
 bool PcmData::WriteToWavFile( const std::filesystem::path& wavPath ) const
 {
-  uint32_t dataSize = uint32_t( mPcm->size() );
+  uint32_t dataSize = uint32_t( pcmBuffer_->size() );
 
   WaveHeader wh;
   uint32_t fileSize  = static_cast<uint32_t>( sizeof( wh ) + dataSize - sizeof( wh.chunkID ) - sizeof( wh.fileSize ) );
   wh.fileSize        = Util::ToLittleEndian( fileSize );
-  wh.nChannels       = Util::ToLittleEndian( static_cast<uint16_t>( mChannelCount ) );
-  wh.wBitsPerSample  = Util::ToLittleEndian( static_cast<uint16_t>( mBitsPerSample ) );
-  wh.nSamplesPerSec  = Util::ToLittleEndian( mSamplesPerSecond );
+  wh.nChannels       = Util::ToLittleEndian( static_cast<uint16_t>( channelCount_ ) );
+  wh.wBitsPerSample  = Util::ToLittleEndian( static_cast<uint16_t>( bitsPerSample_ ) );
+  wh.nSamplesPerSec  = Util::ToLittleEndian( samplesPerSecond_ );
   uint16_t blockAlign= static_cast<uint16_t>( wh.nChannels * wh.wBitsPerSample / CHAR_BIT );
   wh.nBlockAlign     = Util::ToLittleEndian( blockAlign );
   wh.nAvgBytesPerSec = Util::ToLittleEndian( wh.nSamplesPerSec * wh.nBlockAlign );
@@ -139,7 +139,7 @@ bool PcmData::WriteToWavFile( const std::filesystem::path& wavPath ) const
     return false;
   if( !wavFile.Write( &wh, sizeof( wh ) ) )
     return false;
-  if( !wavFile.Write( mPcm->data(), dataSize ) )
+  if( !wavFile.Write( pcmBuffer_->data(), dataSize ) )
     return false;
   return true;
 }
@@ -152,10 +152,10 @@ uint32_t PcmData::GetEstDataSize( uint32_t audioMilliseconds ) const
   // Divide before multiplying, even though we lose some precision
   // It's just an estimate after all
 
-  auto sampleCount = audioMilliseconds / kMillisecondsPerSecond * mSamplesPerSecond;
-  auto bytesPerSample = mBitsPerSample / CHAR_BIT; // 1-4
+  auto sampleCount = audioMilliseconds / kMillisecondsPerSecond * samplesPerSecond_;
+  auto bytesPerSample = bitsPerSample_ / CHAR_BIT; // 1-4
   auto channelByteCount = sampleCount * bytesPerSample;
-  auto totalBytes = channelByteCount * static_cast<uint32_t>( mChannelCount ); // channels = 1-2
+  auto totalBytes = channelByteCount * static_cast<uint32_t>( channelCount_ ); // channels = 1-2
 
   assert( sampleCount > audioMilliseconds ); // check for overflow
   assert( totalBytes > channelByteCount ); // check for overflow
