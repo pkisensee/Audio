@@ -122,8 +122,6 @@ bool Mp3AudioData::Load( const std::filesystem::path& mp3FileName, uint64_t file
   uint32_t firstFrameOffset = static_cast<uint32_t>( pFirstMpegFrame - audioBuffer_.data() );
   assert( firstFrameOffset <= audioBufferSize );
   ParseFrames( pFirstMpegFrame, audioBufferSize - firstFrameOffset );
-
-  fileClose.wait();
   return true;
 }
 
